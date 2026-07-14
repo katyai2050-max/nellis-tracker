@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nellis Auction Tracker — Katy, TX</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface-2: #f9f8f5;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.18);
+    --text: #1a1a18;
+    --text-sec: #5f5e5a;
+    --text-muted: #888780;
+    --radius: 8px;
+    --accent: #185fa5;
+    --accent-bg: #e6f1fb;
+    --accent-border: #85b7eb;
+    --success: #3b6d11;
+    --success-bg: #eaf3de;
+    --success-border: #97c459;
+    --danger: #a32d2d;
+    --danger-bg: #fcebeb;
+    --danger-border: #f09595;
+    --warning: #854f0b;
+    --warning-bg: #faeeda;
+    --warning-border: #ef9f27;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --surface: #2c2c2a;
+      --surface-2: #232321;
+      --border: rgba(255,255,255,0.1);
+      --border-strong: rgba(255,255,255,0.18);
+      --text: #f1efe8;
+      --text-sec: #b4b2a9;
+      --text-muted: #888780;
+      --accent: #378add;
+      --accent-bg: #0c447c22;
+      --accent-border: #185fa5;
+      --success: #97c459;
+      --success-bg: #27500a22;
+      --success-border: #3b6d11;
+      --danger: #f09595;
+      --danger-bg: #791f1f22;
+      --danger-border: #a32d2d;
+      --warning: #ef9f27;
+      --warning-bg: #63380622;
+      --warning-border: #854f0b;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+  }
+
+  .app { max-width: 760px; margin: 0 auto; }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .header h1 { font-size: 20px; font-weight: 600; color: var(--text); }
+  .header .sub { font-size: 13px; color: var(--text-sec); margin-top: 3px; }
+  .header .fee-note { font-size: 11px; color: var(--text-muted); text-align: right; line-height: 1.5; }
+
+  .fee-banner {
+    background: var(--warning-bg);
+    border: 0.5px solid var(--warning-border);
+    border-radius: var(--radius);
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--warning);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .add-form {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 0.5px solid var(--border);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .section-label { font-size: 13px; font-weight: 500; color: var(--text-sec); margin-bottom: 10px; }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 110px 120px 44px;
+    gap: 8px;
+    align-items: end;
+  }
+  .field label { font-size: 12px; color: var(--text-sec); display: block; margin-bottom: 4px; }
+  .field input, .field select {
+    width: 100%;
+    height: 36px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 0 10px;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+
+  .add-btn {
+    height: 36px;
+    width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-bg);
+    border: 0.5px solid var(--accent-border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 300;
+    line-height: 1;
+    transition: background 0.15s;
+  }
+  .add-btn:hover { background: var(--accent); color: #fff; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+  .stat { background: var(--surface); border-radius: var(--radius); padding: 0.75rem 1rem; border: 0.5px solid var(--border); }
+  .stat .slabel { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .stat .sval { font-size: 24px; font-weight: 600; color: var(--text); margin-top: 2px; }
+  .stat .sval.danger { color: var(--danger); }
+  .stat .sval.success { color: var(--success); }
+
+  .filter-bar { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .filter-btn {
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    background: transparent;
+    border: 0.5px solid var(--border-strong);
+    color: var(--text-sec);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); font-weight: 500; }
+
+  .items-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .item-card {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 0.5px solid var(--border);
+    padding: 1rem 1.25rem;
+    transition: border-color 0.2s;
+  }
+  .item-card.ending-soon { border-color: var(--warning-border); background: var(--warning-bg); }
+  .item-card.good-deal { border-color: var(--success-border); }
+  .item-card.over-budget { border-color: var(--danger-border); }
+  .item-card.won-card { border-color: var(--success-border); opacity: 0.85; }
+  .item-card.lost-card { opacity: 0.6; }
+
+  .item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .item-name { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
+  .status-tag { font-size: 11px; color: var(--text-muted); font-weight: 400; margin-left: 6px; }
+
+  .item-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
+  .badge {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: var(--radius);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .badge.warning { background: var(--warning-bg); color: var(--warning); border: 0.5px solid var(--warning-border); }
+  .badge.success { background: var(--success-bg); color: var(--success); border: 0.5px solid var(--success-border); }
+  .badge.danger { background: var(--danger-bg); color: var(--danger); border: 0.5px solid var(--danger-border); }
+  .badge.neutral { background: var(--surface-2); color: var(--text-sec); border: 0.5px solid var(--border-strong); }
+  .badge.urgent { background: var(--danger); color: #fff; border: none; }
+
+  .price-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .price-box {
+    background: var(--surface-2);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    border: 0.5px solid var(--border);
+  }
+  .price-box .plabel { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+  .price-box .pval { font-size: 14px; font-weight: 600; color: var(--text); }
+  .price-box .pval.good { color: var(--success); }
+  .price-box .pval.bad { color: var(--danger); }
+  .price-box .pval.warn { color: var(--warning); }
+  .price-box .psub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+  .item-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-sec);
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .meta-val { color: var(--text); font-weight: 500; }
+  .countdown { font-variant-numeric: tabular-nums; }
+
+  .notes-input {
+    width: 100%;
+    font-size: 13px;
+    margin-top: 10px;
+    resize: none;
+    height: 34px;
+    padding: 7px 10px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+  }
+  .notes-input:focus { border-color: var(--accent); }
+
+  .update-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .update-row span { font-size: 12px; color: var(--text-muted); }
+  .update-row input {
+    width: 80px;
+    height: 30px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 0 8px;
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+  }
+  .update-row input:focus { border-color: var(--accent); }
+
+  .item-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  .btn-open {
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    background: var(--accent-bg);
+    border: 0.5px solid var(--accent-border);
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  .btn-open:hover { background: var(--accent); color: #fff; }
+  .btn-status {
+    font-size: 12px;
+    padding: 5px 11px;
+    border-radius: var(--radius);
+    background: transparent;
+    border: 0.5px solid var(--border-strong);
+    color: var(--text-sec);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-status:hover { border-color: var(--success-border); color: var(--success); }
+  .btn-status.active-won { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+  .btn-status.active-lost { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+  .btn-del {
+    margin-left: auto;
+    font-size: 13px;
+    padding: 5px 10px;
+    border-radius: var(--radius);
+    background: transparent;
+    border: 0.5px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-del:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+
+  .empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+    font-size: 14px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 0.5px dashed var(--border-strong);
+  }
+  .empty-icon { font-size: 36px; display: block; margin-bottom: 10px; }
+
+  .stars { color: #ba7517; }
+
+  @media (max-width: 580px) {
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid .add-btn { grid-column: span 2; width: 100%; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .price-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div>
+      <h1>Nellis auction tracker — Katy, TX</h1>
+      <div class="sub">3615 W Grand Pkwy N, Katy, TX 77449 &nbsp;·&nbsp; Mon–Thu 7am–5pm &nbsp;·&nbsp; Fri–Sun 7am–6pm</div>
+    </div>
+    <div class="fee-note">15% buyer's premium + 8.25% tax<br>Max bid = retail × 50% ÷ 1.15 ÷ 1.0825</div>
+  </div>
+
+  <div class="fee-banner">
+    ⚠️ Max bid shown is already backed out of all fees. If you bid up to that number, your total out-of-pocket stays at or under 50% of retail.
+  </div>
+
+  <div class="add-form">
+    <div class="section-label">Add item to watchlist</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Item name</label>
+        <input type="text" id="in-name" placeholder="e.g. Dewalt drill set" />
+      </div>
+      <div class="field">
+        <label>Retail price ($) <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+        <input type="number" id="in-retail" placeholder="auto-lookup" min="0" />
+      </div>
+      <div class="field">
+        <label>Min rating</label>
+        <select id="in-rating">
+          <option value="4">4★ and up</option>
+          <option value="3">3★ and up</option>
+          <option value="4.5">4.5★ only</option>
+        </select>
+      </div>
+      <button class="add-btn" onclick="addItem()" title="Add item">+</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="slabel">Watching</div><div class="sval" id="s-total">0</div></div>
+    <div class="stat"><div class="slabel">Ending today</div><div class="sval danger" id="s-ending">0</div></div>
+    <div class="stat"><div class="slabel">Under max bid</div><div class="sval success" id="s-deals">0</div></div>
+    <div class="stat"><div class="slabel">Won total</div><div class="sval" id="s-won">0</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('urgent',this)">🔴 Bid now</button>
+    <button class="filter-btn" onclick="setFilter('ending',this)">Ending soon</button>
+    <button class="filter-btn" onclick="setFilter('deals',this)">Under max bid</button>
+    <button class="filter-btn" onclick="setFilter('won',this)">Won</button>
+    <button class="filter-btn" onclick="setFilter('lost',this)">Lost / passed</button>
+  </div>
+
+  <div class="items-list" id="items-list">
+    <div class="empty"><span class="empty-icon">🏷️</span>No items yet — add one above</div>
+  </div>
+
+</div>
+
+<script>
+const PREMIUM = 1.15;
+const TAX = 1.0825;
+
+function calcMaxBid(retail) {
+  return Math.floor((retail * 0.5) / PREMIUM / TAX);
+}
+function calcTotal(bid) {
+  return Math.round(bid * PREMIUM * TAX * 100) / 100;
+}
+function calcPct(total, retail) {
+  return Math.round((total / retail) * 100);
+}
+
+let items = [];
+try { items = JSON.parse(localStorage.getItem('nellis_tracker_v2') || '[]'); } catch(e) {}
+let activeFilter = 'all';
+
+function save() {
+  try { localStorage.setItem('nellis_tracker_v2', JSON.stringify(items)); } catch(e) {}
+}
+
+function addItem() {
+  const name = document.getElementById('in-name').value.trim();
+  const retailRaw = parseFloat(document.getElementById('in-retail').value);
+  const retail = (!isNaN(retailRaw) && retailRaw > 0) ? retailRaw : null;
+  const minRating = parseFloat(document.getElementById('in-rating').value);
+  if (!name) { alert('Enter an item name.'); return; }
+
+  items.push({
+    id: Date.now(),
+    name,
+    retail,
+    maxBid: retail ? calcMaxBid(retail) : null,
+    minRating,
+    endTime: null,
+    curBid: 0,
+    rating: 0,
+    status: 'active',
+    notes: '',
+    retailPending: !retail
+  });
+  save();
+  document.getElementById('in-name').value = '';
+  document.getElementById('in-retail').value = '';
+  document.getElementById('in-name').focus();
+  render();
+}
+
+document.getElementById('in-retail').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
+document.getElementById('in-name').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('in-retail').focus(); });
+
+function removeItem(id) {
+  if (!confirm('Remove this item?')) return;
+  items = items.filter(i => i.id !== id);
+  save(); render();
+}
+
+function updateField(id, field, val) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  if (field === 'curBid') item.curBid = Math.max(0, parseInt(val) || 0);
+  if (field === 'rating') item.rating = Math.min(5, Math.max(0, parseFloat(val) || 0));
+  if (field === 'notes') item.notes = val;
+  if (field === 'status') {
+    item.status = item.status === val ? 'active' : val;
+  }
+  if (field === 'endTime') {
+    item.endTime = val ? new Date(val).getTime() : null;
+  }
+  save(); render();
+}
+
+function setFilter(f, el) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function formatCountdown(endTime) {
+  if (!endTime) return 'No end time set';
+  const ms = endTime - Date.now();
+  if (ms <= 0) return 'Ended';
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  if (h > 24) return Math.floor(h / 24) + 'd ' + (h % 24) + 'h left';
+  return h + 'h ' + m + 'm left';
+}
+
+function toLocalDatetimeValue(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function stars(r) {
+  if (!r) return '—';
+  const f = Math.floor(r);
+  return '★'.repeat(f) + (r % 1 >= 0.5 ? '½' : '') + ' ' + r.toFixed(1);
+}
+
+function render() {
+  const now = Date.now();
+  const active = items.filter(i => i.status === 'active');
+  const ending = active.filter(i => i.endTime && (i.endTime - now) < 24*3600*1000 && i.endTime > now);
+  const deals = active.filter(i => i.curBid > 0 && i.curBid <= i.maxBid && i.rating >= i.minRating);
+  const won = items.filter(i => i.status === 'won');
+
+  document.getElementById('s-total').textContent = active.length;
+  document.getElementById('s-ending').textContent = ending.length;
+  document.getElementById('s-deals').textContent = deals.length;
+  document.getElementById('s-won').textContent = won.length;
+
+  let filtered = [...items];
+  if (activeFilter === 'urgent') filtered = active.filter(i => i.endTime && (i.endTime - now) < 2*3600*1000 && i.endTime > now && i.curBid > 0 && i.curBid <= i.maxBid && i.rating >= i.minRating);
+  else if (activeFilter === 'ending') filtered = ending;
+  else if (activeFilter === 'deals') filtered = deals;
+  else if (activeFilter === 'won') filtered = won;
+  else if (activeFilter === 'lost') filtered = items.filter(i => i.status === 'lost' || i.status === 'passed');
+
+  filtered.sort((a, b) => {
+    if (a.endTime && b.endTime) return a.endTime - b.endTime;
+    if (a.endTime) return -1;
+    if (b.endTime) return 1;
+    return b.id - a.id;
+  });
+
+  const list = document.getElementById('items-list');
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty"><span class="empty-icon">' + (items.length ? '🔍' : '🏷️') + '</span>' + (items.length ? 'No items match this filter.' : 'No items yet — add one above.') + '</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(item => {
+    const hoursLeft = item.endTime ? (item.endTime - now) / 3600000 : null;
+    const endingSoon = hoursLeft !== null && hoursLeft < 24 && hoursLeft > 0 && item.status === 'active';
+    const urgent = hoursLeft !== null && hoursLeft < 2 && hoursLeft > 0 && item.curBid > 0 && item.maxBid && item.curBid <= item.maxBid && item.rating >= item.minRating && item.status === 'active';
+    const underBudget = item.curBid > 0 && item.maxBid && item.curBid <= item.maxBid;
+    const ratingOk = item.rating >= item.minRating;
+    const totalIfWin = item.curBid > 0 ? calcTotal(item.curBid) : 0;
+    const totalPct = item.curBid > 0 && item.retail ? calcPct(totalIfWin, item.retail) : 0;
+    const maxTotal = item.maxBid ? calcTotal(item.maxBid) : 0;
+    const noRetail = !item.retail;
+
+    let cardClass = 'item-card';
+    if (item.status === 'won') cardClass += ' won-card';
+    else if (item.status === 'lost' || item.status === 'passed') cardClass += ' lost-card';
+    else if (urgent || endingSoon) cardClass += ' ending-soon';
+    else if (underBudget && ratingOk) cardClass += ' good-deal';
+    else if (item.curBid > 0 && item.maxBid && !underBudget) cardClass += ' over-budget';
+
+    const statusTag = item.status !== 'active' ? `<span class="status-tag">· ${item.status.charAt(0).toUpperCase()+item.status.slice(1)}</span>` : '';
+
+    return `<div class="${cardClass}">
+      <div class="item-top">
+        <div class="item-name">${escHtml(item.name)}${statusTag}</div>
+        <div class="item-badges">
+          ${noRetail ? '<span class="badge neutral">⏳ Retail lookup pending</span>' : ''}
+          ${urgent ? '<span class="badge urgent">🔴 Bid now</span>' : ''}
+          ${endingSoon && !urgent ? '<span class="badge warning">⏰ Ending soon</span>' : ''}
+          ${!noRetail && item.status==='active' && underBudget && ratingOk && !urgent && !endingSoon ? '<span class="badge success">✓ Good deal</span>' : ''}
+          ${!noRetail && item.status==='active' && item.curBid > 0 && !underBudget ? '<span class="badge danger">Over budget</span>' : ''}
+          ${item.status==='active' && item.rating > 0 && !ratingOk ? '<span class="badge neutral">Low rating</span>' : ''}
+        </div>
+      </div>
+
+      <div class="price-grid">
+        <div class="price-box">
+          <div class="plabel">Retail price</div>
+          <div class="pval">${item.retail ? '$'+item.retail.toLocaleString() : '<span style="color:var(--text-muted);font-size:12px">Auto-lookup by shortcut</span>'}</div>
+          ${noRetail ? `<div class="psub" style="margin-top:4px"><input type="number" placeholder="Enter manually" min="0" onchange="setRetail(${item.id},this.value)" style="width:120px;font-size:12px;height:24px;padding:2px 6px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;" /></div>` : ''}
+        </div>
+        <div class="price-box">
+          <div class="plabel">Your max bid</div>
+          <div class="pval warn">${item.maxBid ? '$'+item.maxBid.toLocaleString() : '—'}</div>
+          ${item.maxBid ? `<div class="psub">→ $${maxTotal.toFixed(0)} w/ fees</div>` : ''}
+        </div>
+        <div class="price-box">
+          <div class="plabel">Current bid + fees</div>
+          <div class="pval ${item.curBid === 0 ? '' : underBudget ? 'good' : 'bad'}">
+            ${item.curBid > 0 ? '$'+item.curBid.toLocaleString()+' → $'+totalIfWin.toFixed(0)+(item.retail ? ' ('+totalPct+'%)' : '') : '—'}
+          </div>
+        </div>
+        <div class="price-box">
+          <div class="plabel">Rating</div>
+          <div class="pval stars">${stars(item.rating)}</div>
+          <div class="psub">Min: ${item.minRating}★</div>
+        </div>
+      </div>
+
+      <div class="item-meta">
+        <span>⏱ <span class="countdown">${formatCountdown(item.endTime)}</span></span>
+        <span>Set end time: <input type="datetime-local" value="${toLocalDatetimeValue(item.endTime)}" onchange="updateField(${item.id},'endTime',this.value)" style="font-size:12px;height:26px;padding:2px 6px;border:0.5px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;" /></span>
+      </div>
+
+      <input type="text" class="notes-input" placeholder="Notes — condition, pickup location, things to check..." value="${escAttr(item.notes)}" onchange="updateField(${item.id},'notes',this.value)" />
+
+      <div class="update-row">
+        <span>Current bid ($):</span>
+        <input type="number" min="0" value="${item.curBid || ''}" placeholder="0" onchange="updateField(${item.id},'curBid',this.value)" />
+        <span>Rating (1–5):</span>
+        <input type="number" min="0" max="5" step="0.1" value="${item.rating || ''}" placeholder="0" onchange="updateField(${item.id},'rating',this.value)" />
+      </div>
+
+      <div class="item-actions">
+        <a href="https://www.nellisauction.com/search?query=${encodeURIComponent(item.name)}&Location+Name=Katy" target="_blank" class="btn-open">↗ Search Katy location</a>
+        <button class="btn-status ${item.status==='won'?'active-won':''}" onclick="updateField(${item.id},'status','won')">🏆 Won</button>
+        <button class="btn-status ${item.status==='lost'?'active-lost':''}" onclick="updateField(${item.id},'status','lost')">✗ Lost</button>
+        <button class="btn-status ${item.status==='passed'?'active-lost':''}" onclick="updateField(${item.id},'status','passed')">Passed</button>
+        ${item.status !== 'active' ? `<button class="btn-status" onclick="updateField(${item.id},'status','active')">↺ Reactivate</button>` : ''}
+        <button class="btn-del" onclick="removeItem(${item.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setRetail(id, val) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const retail = parseFloat(val);
+  if (!retail || retail <= 0) return;
+  item.retail = retail;
+  item.maxBid = calcMaxBid(retail);
+  item.retailPending = false;
+  save(); render();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s || '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Pre-load default watchlist if empty
+const DEFAULT_ITEMS = [
+  { name: 'Lego Creator set',                    retail: null, minRating: 4 },
+  { name: 'CAP Barbell dumbbell weight set',      retail: 80,   minRating: 4 },
+  { name: 'HP 62XL ink cartridge black color combo', retail: 60, minRating: 4 },
+  { name: 'Vacuum storage bags space saver travel',  retail: 25, minRating: 4 },
+  { name: 'Electric lawn mower cordless',         retail: 200,  minRating: 4 },
+  { name: 'Cordless string trimmer weed eater',   retail: 80,   minRating: 4 },
+  { name: 'Expandable garden water hose 100ft',   retail: 45,   minRating: 4 },
+  { name: 'Cordless stick vacuum cleaner',        retail: 120,  minRating: 4 },
+  { name: 'Dryer vent cleaning brush kit flexible', retail: 20, minRating: 4 },
+  { name: 'Clear stackable storage bins containers set', retail: 40, minRating: 4 },
+  { name: 'Laundry room shelf organizer wall mount',  retail: 45, minRating: 4 },
+  { name: 'Camping tent 4 person waterproof',     retail: 100,  minRating: 4 },
+  { name: 'Winix C545 replacement filter',        retail: 38,   minRating: 4 },
+  { name: 'Stretch dining chair covers set',      retail: 30,   minRating: 4 },
+  { name: 'AA rechargeable batteries pack',        retail: 25,   minRating: 4 },
+  { name: 'Electric skillet nonstick 12 inch',    retail: 50,   minRating: 4 },
+  { name: 'Electric pressure cooker 6 quart',     retail: 60,   minRating: 4 },
+];
+
+if (items.length === 0) {
+  let baseId = Date.now();
+  DEFAULT_ITEMS.forEach((d, i) => {
+    items.push({
+      id: baseId + i,
+      name: d.name,
+      retail: d.retail,
+      maxBid: d.retail ? calcMaxBid(d.retail) : null,
+      minRating: d.minRating,
+      endTime: null,
+      curBid: 0,
+      rating: 0,
+      status: 'active',
+      notes: '',
+      retailPending: !d.retail
+    });
+  });
+  save();
+}
+
+render();
+setInterval(render, 60000);
+</script>
+</body>
+</html>
